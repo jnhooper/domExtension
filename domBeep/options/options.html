@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DomBeeper Options</title>
+  <style>
+    body: { padding: 10px; }
+    input[type="text"] { margin-left: 10px; }
+
+    #turnNotifierGracePeriodSeconds { width: 0.25in; }
+    #save { margin-top: 20px; }
+  </style>
+</head>
+
+<body>
+  <h1>Turn Notifier</h1>
+    <label>
+        Grace period (seconds)
+        <input type="text" id="turnNotifierGracePeriodSeconds" placeholder="5" />
+    </label>
+
+    <div>
+        <button id="save">Save</button>
+        <div id="status"></div>
+    </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

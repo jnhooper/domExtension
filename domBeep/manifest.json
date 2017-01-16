@@ -3,12 +3,19 @@
 
   "name": "Dominion Beeper",
   "description": "Extension to make the online Dominion game beep when its your turn.",
-  "version": "0.0.0.1",
+  "version": "0.0.0.2",
 
   "content_scripts": [
     {
       "matches":["https://dominion.games/*", "https://www.dominion.games/*"],
       "js":["domBeep.js"]
     }
-  ]
+  ],
+
+  "permissions": ["storage"],
+
+  "options_ui": {
+    "page": "options/options.html",
+    "chrome_style": true
+  }
 }
