@@ -1,7 +1,7 @@
 // Check out https://developer.chrome.com/extensions/optionsV2
 
 // Saves options to chrome.storage.sync.
-function save_options() {
+const save_options = () => {
   var fallbackGracePeriodSeconds = 5;
   var rawTurnNotifierGracePeriodSeconds= document.getElementById('turnNotifierGracePeriodSeconds').value;
   var turnNotifierGracePeriodSeconds = parseInt(rawTurnNotifierGracePeriodSeconds, 10) || fallbackGracePeriod;
@@ -19,7 +19,7 @@ function save_options() {
 
 // Restores select box and checkbox state using the preferences
 // stored in chrome.storage.
-function restore_options() {
+const restore_options = () => {
   chrome.storage.sync.get({
     turnNotifierGracePeriodSeconds: '5'
   }, function(items) {

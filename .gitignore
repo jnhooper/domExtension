@@ -2,3 +2,4 @@ node_modules/**
 
 # webpack outputs compiled files here
 extension/js/**
+npm-debug.log

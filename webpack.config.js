@@ -15,5 +15,14 @@ module.exports = {
     modules: [path.resolve(__dirname, 'src'), 'node_modules']
   },
 
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        loader: 'babel-loader'
+      }
+    ]
+  },
+
   watch: process.env.DEV === 'yes'
 };
