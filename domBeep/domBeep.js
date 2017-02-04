@@ -39,6 +39,16 @@
     return !logText.includes(itsNotYourTurnText);
   }
 
+  function someoneIsRequestingAnUndo() {
+    var allowUndoButtonText = "Grant";
+    var modalButtons = document.getElementsByClassName("lobby-button");
+    if (modalButtons && modalButtons[0] && modalButtons[0].textContent === allowUndoButtonText) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function beepNTimes(n) {
     var timeBetweenBeeps = 400;
     for (var i = 0; i < n; i++) {
@@ -61,7 +71,12 @@
 
 
   window.DOM_BEEPER_ID = setInterval(function() {
-    if (weAreInAGame() && itIsMyTurn() && !weClickedRecently() && !muted) {
+    if (
+      weAreInAGame() &&
+      (itIsMyTurn() || someoneIsRequestingAnUndo()) &&
+      !weClickedRecently() &&
+      !muted
+    ) {
       beepNTimes(3);
       muteFor(GRACE_PERIOD);
 
