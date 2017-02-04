@@ -1,0 +1,24 @@
+{
+  "name": "dominion-beeper",
+  "version": "0.0.2",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node node_modules/.bin/webpack",
+    "start": "DEV=yes node node_modules/.bin/webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jnhooper/domExtension.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jnhooper/domExtension/issues"
+  },
+  "homepage": "https://github.com/jnhooper/domExtension#readme",
+  "devDependencies": {
+    "webpack": "^2.2.1"
+  }
+}
