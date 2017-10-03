@@ -19,10 +19,8 @@
   },
   "homepage": "https://github.com/jnhooper/domExtension#readme",
   "devDependencies": {
-    "babel-core": "^6.22.1",
-    "babel-loader": "^6.2.10",
-    "babel-preset-es2015": "^6.22.0",
-    "babel-preset-stage-2": "^6.22.0",
+    "awesome-typescript-loader": "^3.2.3",
+    "typescript": "^2.5.3",
     "webpack": "^2.2.1"
   }
 }
