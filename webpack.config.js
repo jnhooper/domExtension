@@ -3,7 +3,7 @@ var path = require('path');
 module.exports = {
   devtool: "sourcemap",
   entry: {
-    domBeep: 'domBeep',
+    main: 'main',
     options: 'options',
   },
 
