@@ -2,6 +2,9 @@ var path = require('path');
 
 module.exports = {
   devtool: "sourcemap",
+
+  context: path.resolve(__dirname, 'src'),
+
   entry: {
     main: 'main',
     options: 'options',

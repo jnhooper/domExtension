@@ -2,9 +2,9 @@
   "compilerOptions": {
     "sourceMap": true,
     "noImplicitAny": true,
-    "module": "commonjs",
-    "target": "es5"
-  },
-  "include": [
-  ]
+    "strictNullChecks": true,
+    "module": "ES6",
+    "moduleResolution": "node",
+    "target": "es2015"
+  }
 }
