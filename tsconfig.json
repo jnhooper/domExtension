@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "module": "ES6",
+    "moduleResolution": "node",
+    "target": "es2015"
+  }
+}

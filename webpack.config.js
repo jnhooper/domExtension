@@ -1,8 +1,12 @@
 var path = require('path');
 
 module.exports = {
+  devtool: "sourcemap",
+
+  context: path.resolve(__dirname, 'src'),
+
   entry: {
-    domBeep: 'domBeep',
+    main: 'main',
     options: 'options',
   },
 
@@ -12,14 +16,15 @@ module.exports = {
   },
 
   resolve: {
+    extensions: [".ts", ".js", ".json"],
     modules: [path.resolve(__dirname, 'src'), 'node_modules']
   },
 
   module: {
     rules: [
       {
-        test: /\.jsx?$/,
-        loader: 'babel-loader'
+        test: /\.tsx?$/,
+        loader: 'awesome-typescript-loader'
       }
     ]
   },
