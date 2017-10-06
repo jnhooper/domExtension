@@ -88,15 +88,14 @@ export class DomChat {
     });
   }
 
-  // Invokes your callback with each chat message as they arrive
-  // This includes messages from the user.
-  subscribeToChat(next: (dcm: DomChatMessage) => any): Subscription {
-    return this.chatObservable.subscribe(next);
+  // A sequence of chat messages from all users, including our user
+  getChatObservable(): Observable<DomChatMessage> {
+    return this.chatObservable;
   }
 
-  // Invokes your callback with each command as it's entered in the chat window
-  subscribeToCommands(next: (command: DomCommand) => any): Subscription {
-    return this.commandsObservable.subscribe(next);
+  // A sequence of commands entered by our user
+  getCommandsObservable(): Observable<DomCommand> {
+    return this.commandsObservable;
   }
 
   sendChat(text: string) {
