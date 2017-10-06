@@ -12,7 +12,8 @@ setInterval(() => {
     console.log('Found a chat root! Establishing dom chat handle...');
     // If we don't have a DomChat instance yet, but there is a chat box on the page - connect to it
     activeDomChat = new DomChat(chatRoot);
-    chatSubscription = activeDomChat.subscribe(domChatMessage => {
+    activeDomChat.sendChat('Hello world');
+    chatSubscription = activeDomChat.subscribeToChat(domChatMessage => {
       console.log(`Received chat message from ${domChatMessage.author}: '${domChatMessage.text}'`);
     });
   } else if (!chatRoot && chatSubscription) {

@@ -76,7 +76,21 @@ export class DomChat {
   }
 
   // Invokes your callback with each chat message as they arrive
-  subscribe(next: (dcm: DomChatMessage) => any): Subscription  {
+  // This includes messages from the user.
+  subscribeToChat(next: (dcm: DomChatMessage) => any): Subscription {
     return this.chatObservable.subscribe(next);
+  }
+
+  sendChat(text: string) {
+    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    if (inputs.length < 1) return;
+    const chatInput = inputs[0];
+    chatInput.value = text;
+
+    // Angular won't "pick up" the new input content unless this change event is fired - otherwise,
+    // Angular still thinks the input is empty and so doesn't send the message when we submit it
+    chatInput.dispatchEvent(new Event('change'));
+
+    this.chatFormRoot.dispatchEvent(new Event('submit'));
   }
 }
