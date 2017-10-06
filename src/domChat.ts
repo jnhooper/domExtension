@@ -29,36 +29,23 @@ const chatLine2DomChatMessage = (chatLine: Element): (DomChatMessage | null) => 
   return { author, text };
 };
 
+const findChatFormRoot = () => document.querySelector('.game-chat form');
+const findChatLogRoot = () => document.querySelector('.game-chat > .game-chat-display');
+
 export class DomChat {
-  chatFormRoot: Element;
-  chatLogRoot: Element;
   chatLinesProcessed: number;
   chatObservable: Observable<DomChatMessage>;
   commandsObservable: Observable<DomCommand>;
 
   // Pass this the element that contains the chat log div and the chat submit form.
-  constructor(rootChatElt: Element) {
-    if (!rootChatElt) {
-      throw new Error('DomChat needs the root chat element');
-    }
-
-    const chatFormRoot = rootChatElt.querySelector('form');
-    const chatLogRoot = rootChatElt.querySelector('.game-chat-display');
-
-    if (!chatFormRoot) {
-      throw new Error('Couldn\'t find chat submission form');
-    } else if (!chatLogRoot) {
-      throw new Error('Couldn\'t find chat log');
-    }
-
-    this.chatFormRoot = chatFormRoot;
-    this.chatLogRoot = chatLogRoot;
+  constructor() {
     this.chatLinesProcessed = 0;
 
     this.chatObservable = Observable.create((observer: Observer<DomChatMessage>) => {
       const timerHandle = setInterval(() => {
+        const chatLogRoot = findChatLogRoot();
         // Get all the chat lines that haven't already been processed
-        const allChatLines = this.chatLogRoot.children;
+        const allChatLines = chatLogRoot ? chatLogRoot.children : [];
         const newChatLines = [];
         for (let i = this.chatLinesProcessed; i < allChatLines.length; i++) {
           newChatLines.push(allChatLines[i]);
@@ -71,7 +58,7 @@ export class DomChat {
         // Publish all the new messages
         newDomChatMessages.forEach(dcm => observer.next(dcm));
 
-        this.chatLinesProcessed = allChatLines.length;
+        this.chatLinesProcessed = Math.max(this.chatLinesProcessed, allChatLines.length);
       }, CHAT_POLL_INTERVAL);
 
       return () => {
@@ -114,7 +101,8 @@ export class DomChat {
 
   sendChat(text: string) {
     this.setChatInputText(text);
-    this.chatFormRoot.dispatchEvent(new Event('submit'));
+    const chatForm = findChatFormRoot();
+    chatForm && chatForm.dispatchEvent(new Event('submit'));
   }
 
   showNotice(text: string) {
@@ -128,20 +116,24 @@ export class DomChat {
     const containerDiv = document.createElement('div');
     containerDiv.innerHTML = noticeMarkup;
     const noticeDom = containerDiv.firstChild;
-    if (noticeDom) {
-      this.chatLogRoot.appendChild(noticeDom);
+
+    const chatLogRoot = findChatLogRoot();
+    if (noticeDom && chatLogRoot) {
+      chatLogRoot.appendChild(noticeDom);
     }
   }
 
   getChatInputText(): string {
-    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    const chatFormRoot = findChatFormRoot();
+    const inputs = chatFormRoot ? chatFormRoot.getElementsByTagName('input') : [];
     if (inputs.length < 1) return '';
     const chatInput = inputs[0];
     return chatInput.value;
   }
 
   setChatInputText(text: string) {
-    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    const chatFormRoot = findChatFormRoot();
+    const inputs = chatFormRoot ? chatFormRoot.getElementsByTagName('input') : [];
     if (inputs.length < 1) return;
     const chatInput = inputs[0];
     chatInput.value = text;
