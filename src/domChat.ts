@@ -2,11 +2,19 @@ import { compact as _compact } from 'lodash';
 import { Observable, Observer, Subscription } from 'rxjs';
 
 const CHAT_POLL_INTERVAL = 500;
+const COMMAND_POLL_INTERVAL = 100;
 
 export interface DomChatMessage {
   author: string;
   text: string;
 }
+
+export interface DomCommand {
+  text: string;
+}
+
+// User enters commands by typing into the chat window: <command text here>
+const commandRegex = /^\<(.*?)\>.*$/;
 
 const chatLine2DomChatMessage = (chatLine: Element): (DomChatMessage | null) => {
   const lines = chatLine.getElementsByClassName('log-line');
@@ -26,6 +34,7 @@ export class DomChat {
   chatLogRoot: Element;
   chatLinesProcessed: number;
   chatObservable: Observable<DomChatMessage>;
+  commandsObservable: Observable<DomCommand>;
 
   // Pass this the element that contains the chat log div and the chat submit form.
   constructor(rootChatElt: Element) {
@@ -60,9 +69,6 @@ export class DomChat {
         const newDomChatMessages = _compact(newChatLines.map(chatLine2DomChatMessage));
 
         // Publish all the new messages
-        if (newDomChatMessages.length > 0) {
-          console.log(newDomChatMessages);
-        }
         newDomChatMessages.forEach(dcm => observer.next(dcm));
 
         this.chatLinesProcessed = allChatLines.length;
@@ -73,6 +79,26 @@ export class DomChat {
         clearInterval(timerHandle);
       };
     });
+
+    this.commandsObservable = Observable.create((observer: Observer<DomCommand>) => {
+      const timerHandle = setInterval(() => {
+        // Watch the chat input for something that looks like a command to be typed into it (as
+        // described by the `commandRegex`). If a command is typed, publish it and clear the input
+        const chatInputText = this.getChatInputText();
+        const commandMatches = chatInputText.match(commandRegex);
+        if (commandMatches && commandMatches.length > 1) {
+          const commandText = commandMatches[1];
+          observer.next({ text: commandText });
+
+          this.setChatInputText('');
+        }
+      }, COMMAND_POLL_INTERVAL);
+
+      return () => {
+        console.log('Cleaning up commands observable');
+        clearInterval(timerHandle);
+      }
+    });
   }
 
   // Invokes your callback with each chat message as they arrive
@@ -81,7 +107,40 @@ export class DomChat {
     return this.chatObservable.subscribe(next);
   }
 
+  // Invokes your callback with each command as it's entered in the chat window
+  subscribeToCommands(next: (command: DomCommand) => any): Subscription {
+    return this.commandsObservable.subscribe(next);
+  }
+
   sendChat(text: string) {
+    this.setChatInputText(text);
+    this.chatFormRoot.dispatchEvent(new Event('submit'));
+  }
+
+  showNotice(text: string) {
+    const noticeMarkup = 
+      `<div>
+        <div class="log-line" style="display: inline; color: #ff0000;">
+          ${text}
+        </div>
+      </div>`;
+
+    const containerDiv = document.createElement('div');
+    containerDiv.innerHTML = noticeMarkup;
+    const noticeDom = containerDiv.firstChild;
+    if (noticeDom) {
+      this.chatLogRoot.appendChild(noticeDom);
+    }
+  }
+
+  getChatInputText(): string {
+    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    if (inputs.length < 1) return '';
+    const chatInput = inputs[0];
+    return chatInput.value;
+  }
+
+  setChatInputText(text: string) {
     const inputs = this.chatFormRoot.getElementsByTagName('input')
     if (inputs.length < 1) return;
     const chatInput = inputs[0];
@@ -90,7 +149,5 @@ export class DomChat {
     // Angular won't "pick up" the new input content unless this change event is fired - otherwise,
     // Angular still thinks the input is empty and so doesn't send the message when we submit it
     chatInput.dispatchEvent(new Event('change'));
-
-    this.chatFormRoot.dispatchEvent(new Event('submit'));
   }
 }
