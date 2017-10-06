@@ -2,11 +2,19 @@ import { compact as _compact } from 'lodash';
 import { Observable, Observer, Subscription } from 'rxjs';
 
 const CHAT_POLL_INTERVAL = 500;
+const COMMAND_POLL_INTERVAL = 100;
 
 export interface DomChatMessage {
   author: string;
   text: string;
 }
+
+export interface DomCommand {
+  text: string;
+}
+
+// User enters commands by typing into the chat window: <command text here>
+const commandRegex = /^\<(.*?)\>.*$/;
 
 const chatLine2DomChatMessage = (chatLine: Element): (DomChatMessage | null) => {
   const lines = chatLine.getElementsByClassName('log-line');
@@ -26,6 +34,7 @@ export class DomChat {
   chatLogRoot: Element;
   chatLinesProcessed: number;
   chatObservable: Observable<DomChatMessage>;
+  commandsObservable: Observable<DomCommand>;
 
   // Pass this the element that contains the chat log div and the chat submit form.
   constructor(rootChatElt: Element) {
@@ -60,9 +69,6 @@ export class DomChat {
         const newDomChatMessages = _compact(newChatLines.map(chatLine2DomChatMessage));
 
         // Publish all the new messages
-        if (newDomChatMessages.length > 0) {
-          console.log(newDomChatMessages);
-        }
         newDomChatMessages.forEach(dcm => observer.next(dcm));
 
         this.chatLinesProcessed = allChatLines.length;
@@ -73,12 +79,42 @@ export class DomChat {
         clearInterval(timerHandle);
       };
     });
+
+    this.commandsObservable = Observable.create((observer: Observer<DomCommand>) => {
+      const timerHandle = setInterval(() => {
+        // Watch the chat input for something that looks like a command to be typed into it (as
+        // described by the `commandRegex`). If a command is typed, publish it and clear the input
+        const inputs = this.chatFormRoot.getElementsByTagName('input');
+        if (inputs.length < 1) return;
+
+        const chatInput = inputs[0];
+        const commandMatches = chatInput.value.match(commandRegex);
+        if (commandMatches && commandMatches.length > 1) {
+          const commandText = commandMatches[1];
+          observer.next({ text: commandText });
+
+          chatInput.value = '';
+          // Make sure Angular is notified of the change
+          chatInput.dispatchEvent(new Event('change'));
+        }
+      }, COMMAND_POLL_INTERVAL);
+
+      return () => {
+        console.log('Cleaning up commands observable');
+        clearInterval(timerHandle);
+      }
+    });
   }
 
   // Invokes your callback with each chat message as they arrive
   // This includes messages from the user.
   subscribeToChat(next: (dcm: DomChatMessage) => any): Subscription {
     return this.chatObservable.subscribe(next);
+  }
+
+  // Invokes your callback with each command as it's entered in the chat window
+  subscribeToCommands(next: (command: DomCommand) => any): Subscription {
+    return this.commandsObservable.subscribe(next);
   }
 
   sendChat(text: string) {
@@ -92,5 +128,21 @@ export class DomChat {
     chatInput.dispatchEvent(new Event('change'));
 
     this.chatFormRoot.dispatchEvent(new Event('submit'));
+  }
+
+  showNotice(text: string) {
+    const noticeMarkup = 
+      `<div>
+        <div class="log-line" style="display: inline; color: #ff0000;">
+          ${text}
+        </div>
+      </div>`;
+
+    const containerDiv = document.createElement('div');
+    containerDiv.innerHTML = noticeMarkup;
+    const noticeDom = containerDiv.firstChild;
+    if (noticeDom) {
+      this.chatLogRoot.appendChild(noticeDom);
+    }
   }
 }
