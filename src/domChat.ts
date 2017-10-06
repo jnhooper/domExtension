@@ -84,18 +84,13 @@ export class DomChat {
       const timerHandle = setInterval(() => {
         // Watch the chat input for something that looks like a command to be typed into it (as
         // described by the `commandRegex`). If a command is typed, publish it and clear the input
-        const inputs = this.chatFormRoot.getElementsByTagName('input');
-        if (inputs.length < 1) return;
-
-        const chatInput = inputs[0];
-        const commandMatches = chatInput.value.match(commandRegex);
+        const chatInputText = this.getChatInputText();
+        const commandMatches = chatInputText.match(commandRegex);
         if (commandMatches && commandMatches.length > 1) {
           const commandText = commandMatches[1];
           observer.next({ text: commandText });
 
-          chatInput.value = '';
-          // Make sure Angular is notified of the change
-          chatInput.dispatchEvent(new Event('change'));
+          this.setChatInputText('');
         }
       }, COMMAND_POLL_INTERVAL);
 
@@ -118,15 +113,7 @@ export class DomChat {
   }
 
   sendChat(text: string) {
-    const inputs = this.chatFormRoot.getElementsByTagName('input')
-    if (inputs.length < 1) return;
-    const chatInput = inputs[0];
-    chatInput.value = text;
-
-    // Angular won't "pick up" the new input content unless this change event is fired - otherwise,
-    // Angular still thinks the input is empty and so doesn't send the message when we submit it
-    chatInput.dispatchEvent(new Event('change'));
-
+    this.setChatInputText(text);
     this.chatFormRoot.dispatchEvent(new Event('submit'));
   }
 
@@ -144,5 +131,23 @@ export class DomChat {
     if (noticeDom) {
       this.chatLogRoot.appendChild(noticeDom);
     }
+  }
+
+  getChatInputText(): string {
+    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    if (inputs.length < 1) return '';
+    const chatInput = inputs[0];
+    return chatInput.value;
+  }
+
+  setChatInputText(text: string) {
+    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    if (inputs.length < 1) return;
+    const chatInput = inputs[0];
+    chatInput.value = text;
+
+    // Angular won't "pick up" the new input content unless this change event is fired - otherwise,
+    // Angular still thinks the input is empty and so doesn't send the message when we submit it
+    chatInput.dispatchEvent(new Event('change'));
   }
 }
