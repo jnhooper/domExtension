@@ -1,5 +1,6 @@
 import { Observer, Subscription } from 'rxjs';
-import { DomChat } from './domChat';
+import { endTurn } from './game';
+import DomChat from './domChat';
 
 const domChat = new DomChat();
 
@@ -12,5 +13,8 @@ const commandSubscription = domChat.getCommandsObservable().subscribe(domCommand
   if (domCommand.text === '52' && domChat) {
     domChat.showNotice('You requested a 5-2 reshuffle');
     domChat.sendChat('Dom-bot would like to reshuffle.');
+  } else if (domCommand.text === 'endturn') {
+    domChat.showNotice('Ending your turn.');
+    endTurn();
   }
 });

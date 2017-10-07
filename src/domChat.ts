@@ -34,7 +34,7 @@ const chatLine2DomChatMessage = (chatLine: Element): (DomChatMessage | null) => 
 const findChatFormRoot = () => document.querySelector('.game-chat form');
 const findChatLogRoot = () => document.querySelector('.game-chat > .game-chat-display');
 
-export class DomChat {
+export default class DomChat {
   chatLinesProcessed: number;
   chatObservable: Observable<DomChatMessage>;
   commandsObservable: Observable<DomCommand>;
