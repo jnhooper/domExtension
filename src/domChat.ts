@@ -4,6 +4,8 @@ import { Observable, Observer, Subscription } from 'rxjs';
 const CHAT_POLL_INTERVAL = 500;
 const COMMAND_POLL_INTERVAL = 100;
 
+const NOTICE_COLOR = '#009090';
+
 export interface DomChatMessage {
   author: string;
   text: string;
@@ -107,7 +109,7 @@ export class DomChat {
   showNotice(text: string) {
     const noticeMarkup = 
       `<div>
-        <div class="log-line" style="display: inline; color: #ff0000;">
+        <div class="log-line" style="display: inline; color: ${NOTICE_COLOR};">
           ${text}
         </div>
       </div>`;
