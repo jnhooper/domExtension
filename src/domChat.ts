@@ -100,13 +100,13 @@ export default class DomChat {
     return this.commandsObservable;
   }
 
-  sendChat(text: string) {
+  sendChat(text: string): void {
     this.setChatInputText(text);
     const chatForm = findChatFormRoot();
     chatForm && chatForm.dispatchEvent(new Event('submit'));
   }
 
-  showNotice(text: string) {
+  showNotice(text: string): void {
     const noticeMarkup = 
       `<div>
         <div class="log-line" style="display: inline; color: ${NOTICE_COLOR};">
@@ -132,7 +132,7 @@ export default class DomChat {
     return chatInput.value;
   }
 
-  setChatInputText(text: string) {
+  setChatInputText(text: string): void {
     const chatFormRoot = findChatFormRoot();
     const inputs = chatFormRoot ? chatFormRoot.getElementsByTagName('input') : [];
     if (inputs.length < 1) return;

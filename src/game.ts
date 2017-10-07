@@ -2,9 +2,20 @@ import { retry } from './utils';
 
 const MAX_END_TURN_WAIT = 3000;
 
-// End our user's actions.
-export const endActions = () => {
-  const visibleEndActionsButton = document.querySelector('end-actions-button[aria-hidden="false"] input');
+const endActionsButtonSelector = 'end-actions-button[aria-hidden="false"] > input';
+const endTurnButtonSelector = 'end-turn-button[aria-hidden="false"] > input';
+
+export const isOurTurn = (): boolean => {
+  // We can assume it's our turn if we can see the 'end actions' or 'end turn' button.
+  const canEndActionsOrTurn = document.querySelector(endActionsButtonSelector) ||
+                              document.querySelector(endTurnButtonSelector);
+
+  return Boolean(canEndActionsOrTurn);
+}
+
+// Ends our user's actions, if possible
+export const endActions = (): void => {
+  const visibleEndActionsButton = document.querySelector(endActionsButtonSelector);
   if (visibleEndActionsButton) {
     (<HTMLInputElement> visibleEndActionsButton).click();
   }
@@ -13,11 +24,11 @@ export const endActions = () => {
 // End our user's turn. If actions need to be ended first, that'll be done automatically.
 // This action isn't necessarily synchronous - there are delays while the browser talks to the
 // server. So don't expect the turn to have ended immediately after this is called!
-export const endTurn = () => {
+export const endTurn = (): void => {
   endActions();
 
   const findEndTurnButton = () => {
-    const visibleEndTurnButton = document.querySelector('end-turn-button[aria-hidden="false"] input');
+    const visibleEndTurnButton = document.querySelector(endTurnButtonSelector);
     return { success: !!visibleEndTurnButton, result: visibleEndTurnButton };
   };
 
