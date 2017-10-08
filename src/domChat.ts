@@ -1,5 +1,5 @@
 import { compact as _compact } from 'lodash';
-import { Observable, Observer, Subscription } from 'rxjs';
+import { Observable, Subject, Observer, Subscription } from 'rxjs';
 
 const CHAT_POLL_INTERVAL = 500;
 const COMMAND_POLL_INTERVAL = 100;
@@ -43,7 +43,7 @@ export default class DomChat {
   constructor() {
     this.chatLinesProcessed = 0;
 
-    this.chatObservable = Observable.create((observer: Observer<DomChatMessage>) => {
+    const sourceChatObservable = Observable.create((observer: Observer<DomChatMessage>) => {
       const timerHandle = setInterval(() => {
         const chatLogRoot = findChatLogRoot();
         // Get all the chat lines that haven't already been processed
@@ -69,7 +69,10 @@ export default class DomChat {
       };
     });
 
-    this.commandsObservable = Observable.create((observer: Observer<DomCommand>) => {
+    this.chatObservable = new Subject();
+    sourceChatObservable.subscribe(this.chatObservable);
+
+    const sourceCommandsObservable = Observable.create((observer: Observer<DomCommand>) => {
       const timerHandle = setInterval(() => {
         // Watch the chat input for something that looks like a command to be typed into it (as
         // described by the `commandRegex`). If a command is typed, publish it and clear the input
@@ -88,6 +91,9 @@ export default class DomChat {
         clearInterval(timerHandle);
       }
     });
+
+    this.commandsObservable = new Subject();
+    sourceCommandsObservable.subscribe(this.commandsObservable);
   }
 
   // A sequence of chat messages from all users, including our user
