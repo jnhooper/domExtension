@@ -2,15 +2,34 @@ import { retry } from './utils';
 
 const MAX_END_TURN_WAIT = 3000;
 
+const ourNameSelector = '.hero-info .opponent-name';
+const opponentNamesSelector = '.opponent-view .opponent-name';
 const endActionsButtonSelector = 'end-actions-button[aria-hidden="false"] > input';
 const endTurnButtonSelector = 'end-turn-button[aria-hidden="false"] > input';
 
+const extractNameFromNameElt = (nameElt: Element) => {
+  return (nameElt.textContent || '').split('\n')[0];
+}
+
+export const getOurName = (): string => {
+  const ourNameElt = document.querySelector(ourNameSelector);
+  return ourNameElt ? extractNameFromNameElt(ourNameElt) : '';
+}
+
+export const getOpponentNames = (): string[] => {
+  const opponentNameElts = Array.from(document.querySelectorAll(opponentNamesSelector));
+  return opponentNameElts.map(extractNameFromNameElt);
+}
+
+export const getAllPlayerNames = (): string[] => [getOurName(), ...getOpponentNames()];
+
+// Returns true if it's our user's turn.
 export const isOurTurn = (): boolean => {
   // We can assume it's our turn if we can see the 'end actions' or 'end turn' button.
-  const canEndActionsOrTurn = document.querySelector(endActionsButtonSelector) ||
-                              document.querySelector(endTurnButtonSelector);
+  const canEndActions = document.querySelector(endActionsButtonSelector)
+  const canEndTurn = document.querySelector(endTurnButtonSelector);
 
-  return Boolean(canEndActionsOrTurn);
+  return Boolean(canEndActions || canEndTurn);
 }
 
 // Ends our user's actions, if possible

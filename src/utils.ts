@@ -1,7 +1,7 @@
-// Run the task `maxAttempts` times at an interval of `interval` ms. If it succeeds (as indicated by
+// Run the task `maxAttempts` times at an interval of `intervalMs` ms. If it succeeds (as indicated by
 // the 'success' property the task returns) within the given  number of attempts, returns a promise
 // that resolves to its result. Otherwise rejects.
-export function retry<T>(task: () => { success: boolean, result: T }, maxAttempts: number, interval: number): Promise<T> {
+export function retry<T>(task: () => { success: boolean, result: T }, maxAttempts: number, intervalMs: number): Promise<T> {
   return new Promise((resolve, reject) => {
     let attempts = 0;
     const timerHandle = setInterval(() => {
@@ -15,6 +15,19 @@ export function retry<T>(task: () => { success: boolean, result: T }, maxAttempt
       } else {
         attempts++;
       }
-    }, interval);
+    }, intervalMs);
   });
 };
+
+// Re-evaluates `predicate` at intervals of `intervalMs` until it returns true, then resolves the
+// returned promise.
+export function waitUntil(predicate: () => boolean, intervalMs: number = 100): Promise<void> {
+  return new Promise(resolve => {
+    const timerHandle = setInterval(() => {
+      if (predicate()) {
+        clearInterval(timerHandle);
+        resolve();
+      }
+    }, intervalMs);
+  });
+}
