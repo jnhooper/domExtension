@@ -37,24 +37,21 @@ chatObservable.subscribe(dcm => {
   // Observable containing observables ('windows') of all the acceptances received
   // within 3s of a proposal
   const shuffleConsensusWindows =
-    shuffle52AcceptanceObservable.throttleTime(SHUFFLE_52_CONSENSUS_TIME_LIMIT_MS)
-                                 .windowToggle(
-                                   shuffle52ProposalObservable,
-                                   proposal => Observable.timer(SHUFFLE_52_CONSENSUS_TIME_LIMIT_MS)
-                                 );
+    shuffle52AcceptanceObservable.windowToggle(
+      shuffle52ProposalObservable.throttleTime(SHUFFLE_52_CONSENSUS_TIME_LIMIT_MS),
+      proposal => Observable.timer(SHUFFLE_52_CONSENSUS_TIME_LIMIT_MS)
+    );
 
   // Reduce each window (which is an observable) into a list of players who accepted
   const acceptingPlayersInShuffleConsensusWindows = shuffleConsensusWindows.map(scw => {
     return scw.reduce((accPlayers, player) => [...accPlayers, player], []);
   }).concatAll();
 
-  const allPlayerNames = getAllPlayerNames();
-
   // Partition these windows, now lists of accepting players, into two separate observables: one
   // containing windows where every player accepted, the other windows where not every player did.
   const [shuffleConsensuses, failedShuffleConsensuses] =
     acceptingPlayersInShuffleConsensusWindows.partition(
-      apiscw => _isEmpty(_difference(allPlayerNames, apiscw))
+      apiscw => _isEmpty(_difference(getAllPlayerNames(), apiscw))
     );
 
   shuffleConsensuses.subscribe(() => console.log('WE REACHED A CONSENSUS!!'));
