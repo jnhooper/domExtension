@@ -3,7 +3,7 @@ import { Observable, Observer, Subscription } from 'rxjs';
 import { waitUntil } from './utils';
 import * as Commands from './commands';
 import * as Signals from './signals';
-import { endTurn, getAllPlayerNames } from './game';
+import { isOurTurn, endTurn, getAllPlayerNames } from './game';
 import DomChat from './domChat';
 
 const domChat = new DomChat();
@@ -61,8 +61,17 @@ chatObservable.subscribe(dcm => {
       return _isEmpty(_difference(getAllPlayerNames(), apiscw));
     });
 
-  shuffleConsensuses.subscribe(() => console.log('WE REACHED A CONSENSUS!!'));
-  failedShuffleConsensuses.subscribe(() => console.log('Could not reach a consensus.'));
+  shuffleConsensuses.subscribe(() => {
+    // Once we've all agreed to do a re-shuffle, burn 2 turns.
+    waitUntil(isOurTurn).then(() => {
+      endTurn();
+      waitUntil(isOurTurn).then(() => {
+        endTurn();
+      });
+    });
+  });
+
+  failedShuffleConsensuses.subscribe(() => console.log('Could not reach consensus on reshuffle.'));
 }
 
 const commandSubscription = domChat.getCommandsObservable().subscribe(domCommand => {
