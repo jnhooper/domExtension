@@ -16,7 +16,7 @@ chatObservable.subscribe(dcm => {
 });
 
 {
-  const SHUFFLE_52_CONSENSUS_TIME_LIMIT_MS = 3000;
+  const SHUFFLE_52_CONSENSUS_TIME_LIMIT_MS = 5000;
 
   // An observable of all the proposals to do a reshuffle.
   const shuffle52ProposalObservable = chatObservable.filter(domChatMessage => {
@@ -44,18 +44,25 @@ chatObservable.subscribe(dcm => {
 
   // Reduce each window (which is an observable) into a list of players who accepted
   const acceptingPlayersInShuffleConsensusWindows = shuffleConsensusWindows.map(scw => {
-    return scw.reduce((accPlayers, player) => [...accPlayers, player], []);
+    // Map this observable of accepting players into an observable that accumulates all the players
+    // that have accepted so far in this observable (basically like a reduce)
+    const accPlayersObservable = scw.scan((accPlayers, player) => [...accPlayers, player], []);
+    // Return an observable that either contains: the first element of the reduction to contain
+    // every player's name, OR the last element if we never get that far.
+    // This find is necessary so we can figure out that everyone's accepted without having to wait
+    // for the consensus time limit to finish up and close the window.
+    return accPlayersObservable.find(ap => _isEmpty(_difference(getAllPlayerNames(), ap)));
   }).concatAll();
 
   // Partition these windows, now lists of accepting players, into two separate observables: one
   // containing windows where every player accepted, the other windows where not every player did.
   const [shuffleConsensuses, failedShuffleConsensuses] =
-    acceptingPlayersInShuffleConsensusWindows.partition(
-      apiscw => _isEmpty(_difference(getAllPlayerNames(), apiscw))
-    );
+    acceptingPlayersInShuffleConsensusWindows.partition(apiscw => {
+      return _isEmpty(_difference(getAllPlayerNames(), apiscw));
+    });
 
   shuffleConsensuses.subscribe(() => console.log('WE REACHED A CONSENSUS!!'));
-  failedShuffleConsensuses.subscribe(() => console.log('Could not reach a consensus'));
+  failedShuffleConsensuses.subscribe(() => console.log('Could not reach a consensus.'));
 }
 
 const commandSubscription = domChat.getCommandsObservable().subscribe(domCommand => {
