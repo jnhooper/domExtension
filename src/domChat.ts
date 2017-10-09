@@ -1,8 +1,10 @@
 import { compact as _compact } from 'lodash';
-import { Observable, Observer, Subscription } from 'rxjs';
+import { Observable, Subject, Observer, Subscription } from 'rxjs';
 
 const CHAT_POLL_INTERVAL = 500;
 const COMMAND_POLL_INTERVAL = 100;
+
+const NOTICE_COLOR = '#009090';
 
 export interface DomChatMessage {
   author: string;
@@ -29,36 +31,23 @@ const chatLine2DomChatMessage = (chatLine: Element): (DomChatMessage | null) => 
   return { author, text };
 };
 
-export class DomChat {
-  chatFormRoot: Element;
-  chatLogRoot: Element;
+const findChatFormRoot = () => document.querySelector('.game-chat form');
+const findChatLogRoot = () => document.querySelector('.game-chat > .game-chat-display');
+
+export default class DomChat {
   chatLinesProcessed: number;
   chatObservable: Observable<DomChatMessage>;
   commandsObservable: Observable<DomCommand>;
 
   // Pass this the element that contains the chat log div and the chat submit form.
-  constructor(rootChatElt: Element) {
-    if (!rootChatElt) {
-      throw new Error('DomChat needs the root chat element');
-    }
-
-    const chatFormRoot = rootChatElt.querySelector('form');
-    const chatLogRoot = rootChatElt.querySelector('.game-chat-display');
-
-    if (!chatFormRoot) {
-      throw new Error('Couldn\'t find chat submission form');
-    } else if (!chatLogRoot) {
-      throw new Error('Couldn\'t find chat log');
-    }
-
-    this.chatFormRoot = chatFormRoot;
-    this.chatLogRoot = chatLogRoot;
+  constructor() {
     this.chatLinesProcessed = 0;
 
-    this.chatObservable = Observable.create((observer: Observer<DomChatMessage>) => {
+    const sourceChatObservable = Observable.create((observer: Observer<DomChatMessage>) => {
       const timerHandle = setInterval(() => {
+        const chatLogRoot = findChatLogRoot();
         // Get all the chat lines that haven't already been processed
-        const allChatLines = this.chatLogRoot.children;
+        const allChatLines = chatLogRoot ? chatLogRoot.children : [];
         const newChatLines = [];
         for (let i = this.chatLinesProcessed; i < allChatLines.length; i++) {
           newChatLines.push(allChatLines[i]);
@@ -71,7 +60,7 @@ export class DomChat {
         // Publish all the new messages
         newDomChatMessages.forEach(dcm => observer.next(dcm));
 
-        this.chatLinesProcessed = allChatLines.length;
+        this.chatLinesProcessed = Math.max(this.chatLinesProcessed, allChatLines.length);
       }, CHAT_POLL_INTERVAL);
 
       return () => {
@@ -80,7 +69,10 @@ export class DomChat {
       };
     });
 
-    this.commandsObservable = Observable.create((observer: Observer<DomCommand>) => {
+    this.chatObservable = new Subject();
+    sourceChatObservable.subscribe(this.chatObservable);
+
+    const sourceCommandsObservable = Observable.create((observer: Observer<DomCommand>) => {
       const timerHandle = setInterval(() => {
         // Watch the chat input for something that looks like a command to be typed into it (as
         // described by the `commandRegex`). If a command is typed, publish it and clear the input
@@ -99,28 +91,31 @@ export class DomChat {
         clearInterval(timerHandle);
       }
     });
+
+    this.commandsObservable = new Subject();
+    sourceCommandsObservable.subscribe(this.commandsObservable);
   }
 
-  // Invokes your callback with each chat message as they arrive
-  // This includes messages from the user.
-  subscribeToChat(next: (dcm: DomChatMessage) => any): Subscription {
-    return this.chatObservable.subscribe(next);
+  // A sequence of chat messages from all users, including our user
+  getChatObservable(): Observable<DomChatMessage> {
+    return this.chatObservable;
   }
 
-  // Invokes your callback with each command as it's entered in the chat window
-  subscribeToCommands(next: (command: DomCommand) => any): Subscription {
-    return this.commandsObservable.subscribe(next);
+  // A sequence of commands entered by our user
+  getCommandsObservable(): Observable<DomCommand> {
+    return this.commandsObservable;
   }
 
-  sendChat(text: string) {
+  sendChat(text: string): void {
     this.setChatInputText(text);
-    this.chatFormRoot.dispatchEvent(new Event('submit'));
+    const chatForm = findChatFormRoot();
+    chatForm && chatForm.dispatchEvent(new Event('submit'));
   }
 
-  showNotice(text: string) {
+  showNotice(text: string): void {
     const noticeMarkup = 
       `<div>
-        <div class="log-line" style="display: inline; color: #ff0000;">
+        <div class="log-line" style="display: inline; color: ${NOTICE_COLOR};">
           ${text}
         </div>
       </div>`;
@@ -128,20 +123,24 @@ export class DomChat {
     const containerDiv = document.createElement('div');
     containerDiv.innerHTML = noticeMarkup;
     const noticeDom = containerDiv.firstChild;
-    if (noticeDom) {
-      this.chatLogRoot.appendChild(noticeDom);
+
+    const chatLogRoot = findChatLogRoot();
+    if (noticeDom && chatLogRoot) {
+      chatLogRoot.appendChild(noticeDom);
     }
   }
 
   getChatInputText(): string {
-    const inputs = this.chatFormRoot.getElementsByTagName('input')
+    const chatFormRoot = findChatFormRoot();
+    const inputs = chatFormRoot ? chatFormRoot.getElementsByTagName('input') : [];
     if (inputs.length < 1) return '';
     const chatInput = inputs[0];
     return chatInput.value;
   }
 
-  setChatInputText(text: string) {
-    const inputs = this.chatFormRoot.getElementsByTagName('input')
+  setChatInputText(text: string): void {
+    const chatFormRoot = findChatFormRoot();
+    const inputs = chatFormRoot ? chatFormRoot.getElementsByTagName('input') : [];
     if (inputs.length < 1) return;
     const chatInput = inputs[0];
     chatInput.value = text;

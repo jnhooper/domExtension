@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
 
-  "name": "Dominion Beeper",
-  "description": "Extension to make the online Dominion game beep when its your turn.",
-  "version": "0.0.0.2",
+  "name": "E-Dom Enhancer",
+  "description": "Adds new capabilities to the online Dominion game.",
+  "version": "0.0.0.3",
 
   "content_scripts": [
     {
